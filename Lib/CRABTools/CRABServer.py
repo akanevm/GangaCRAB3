@@ -290,6 +290,8 @@ class CRABServer(GangaObject):
         for field in specFields:
             if getattr(job.inputdata, field) not in [None, [None]]:
                 spec[field] = getattr(job.inputdata, field)
+
+        spec['cachefilename'] = cachefilename
         
         """ 
         spec = {'workflow': job.inputdata.workflow,
