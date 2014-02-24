@@ -1,0 +1,81 @@
+# Ganga configuration file ($Name: Ganga-5-0-1 $). DO NOT remove this line.
+#
+# The [Robot] section:
+# - All settings are commented out, indicating defaults that will be used.
+# - Examples are given for settings which are blank by default.
+# 
+# The other sections:
+# - All settings are specified, with common options for using the robot.
+# - See .gangarc for further details on these options.
+#
+# To start the robot (default configuration):
+#   ganga --config-path=GangaRobot/ROBOT.INI robot run
+#
+# For further details:
+#   ganga --config-path=GangaRobot/ROBOT.INI robot help
+#
+
+#=======================================================================
+
+[Configuration]
+RUNTIME_PATH = GangaCRAB3:GangaRobot
+gangadir = /root/gangadir/robot/
+
+[defaults_GridProxy]
+voms = cms
+validityAtCreation = 48:00
+minValidity = 00:15
+
+[Configuration]
+# Enable GangaRobot to be started using robot script
+SCRIPTS_PATH = GangaRobot/scripts
+
+#=======================================================================
+
+[LCG]
+VirtualOrganisation = cms
+
+[CRAB_CFG]
+server_name = cmsweb-testbed.cern.ch
+apiresource = /crabserver/preprod/
+
+#[CMSSW]
+#CRAB_VERSION = CRAB_2_8_5_patch2
+#location = /data/hc/external/cms/crab
+
+#[USER_CFG]
+#tasktype = hammercloud
+
+#[Metrics]
+#location = /data/hc/apps/cms/config/metrics.ini_hc
+
+#=======================================================================
+
+[Logging]
+GangaCRAB3 = DEBUG
+GangaRobot = DEBUG
+Ganga.GPI = DEBUG
+run_test = DEBUG
+_logfile = /tmp/ganga.log
+_logfile_size = 10000000
+_format = VERBOSE
+
+[PollThread]
+# Enable monitoring for robot script
+default_backend_poll_rate = 30
+
+#=======================================================================
+[Robot]
+# list of action names and sleep periods (seconds)
+Driver_Run = ['submit', 1, 'finish']
+#Driver_Run = ['submit']
+
+# GangaRobot.Framework.Action.IAction class names
+# keys should be Driver_Action_xxx where xxx is an action name in Driver_Run
+Driver_Action_submit = GangaRobot.Lib.Core.ThreadedSubmitter.ThreadedSubmitter
+Driver_Action_finish = GangaRobot.Lib.Core.CoreFinisher.CoreFinisher
+
+# timeout (seconds) for waiting for jobs to finish
+BaseFinisher_Timeout = 0
+
+ThreadedSubmitter_numThreads = 20
