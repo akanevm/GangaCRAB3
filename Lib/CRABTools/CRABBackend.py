@@ -33,6 +33,7 @@ class CRABBackend(IBackend):
     schemadic['server_name']    = SimpleItem(defvalue=None, typelist=['type(None)','str'], doc='')
     schemadic['apiresource']    = SimpleItem(defvalue=None, typelist=['type(None)','str'], doc='')
     schemadic['userproxy']      = SimpleItem(defvalue=None, typelist=['type(None)','str'], doc='')
+    schemadic['asyncdest']      = SimpleItem(defvalue=None, typelist=['type(None)','str'], doc='')
 
     _schema = Schema(Version(1, 0), schemadic)
     _category = 'backends'
@@ -51,6 +52,9 @@ class CRABBackend(IBackend):
         self.server_name = config['server_name']
         self.apiresource = config['apiresource']
         self.userproxy = config['userproxy']
+        self.asyncdest = config['asyncdest']
+        logger.info("asyncdest %s" % self.asyncdest )
+
 
     def master_submit(self, rjobs, subjobconfigs, masterjobconfig):
         """Perform de submission of the master job (the CRAB task)."""

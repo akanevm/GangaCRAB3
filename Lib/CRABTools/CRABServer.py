@@ -284,7 +284,9 @@ class CRABServer(GangaObject):
                       'lfnprefix',
                       'saveoutput',
                       'faillimit',
-                      'ignorelocality'
+                      'ignorelocality',
+                      'inputdata',
+                      'publishdbsurl'
                      ]
         spec = {}
         for field in specFields:
@@ -292,7 +294,10 @@ class CRABServer(GangaObject):
                 spec[field] = getattr(job.inputdata, field)
 
         spec['cachefilename'] = cachefilename
-        
+       
+        if job.backend.asyncdest:
+            spec['asyncdest'] = job.backend.asyncdest
+ 
         """ 
         spec = {'workflow': job.inputdata.workflow,
                 'cacheurl': job.inputdata.cacheurl,
