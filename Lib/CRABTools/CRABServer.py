@@ -241,6 +241,8 @@ class CRABServer(GangaObject):
     def submit(self, job):
         """Submit a new task to CRAB3 """
         logger.info('userproxy: %s' % job.backend.userproxy)
+        logger.info('server_name: %s' % job.backend.server_name)
+        logger.info('apiurl: %s' % job.backend.apiurl)
         #srv='hammer-crab3.cern.ch' #'cmsweb-testbed.cern.ch'
         #proxypath='/afs/cern.ch/user/r/riahi/public/proxy'#'/afs/cern.ch/user/s/spiga/public/PerValentaina/proxy'
         server = HTTPRequests(job.backend.server_name, job.backend.userproxy)
