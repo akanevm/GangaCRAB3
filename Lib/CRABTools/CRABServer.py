@@ -20,6 +20,9 @@ from optparse import OptionParser, OptionGroup
 
 logger = getLogger()
 
+class CRABServerError(Exception):
+    pass
+
 class ResponseHeader(object):
     """ResponseHeader parses HTTP response header"""
     def __init__(self, response):
@@ -243,13 +246,25 @@ class CRABServer(GangaObject):
         logger.info('userproxy: %s' % job.backend.userproxy)
         logger.info('server_name: %s' % job.backend.server_name)
         logger.info('apiresource: %s' % job.backend.apiresource)
-        #srv='hammer-crab3.cern.ch' #'cmsweb-testbed.cern.ch'
-        #proxypath='/afs/cern.ch/user/r/riahi/public/proxy'#'/afs/cern.ch/user/s/spiga/public/PerValentaina/proxy'
+
         server = HTTPRequests(job.backend.server_name, job.backend.userproxy)
-
         resource = job.backend.apiresource+'workflow'
-
-        cachefilename = self.uploadArchive(job.inputdata.pset, job.inputdata.cacheurl)[1]
+        
+        try:
+            cachefilename = self.uploadArchive(job.inputdata.pset, job.inputdata.cacheurl)[1]
+        except HTTPException, e:
+            logger.error(type(e))
+            logger.error(dir(e))
+            logger.error(e.req_headers)
+            logger.error(e.req_data)
+            logger.error(e.reason)
+            logger.error(e.message)
+            logger.error(e.headers)
+            logger.error(e.result)
+            logger.error(e.status)
+            logger.error(e.url)
+            logger.error(e.args)
+            raise CRABServerError("Error uploading cache")
 
         specFields = ['workflow',
                       'cacheurl',
@@ -324,12 +339,12 @@ class CRABServer(GangaObject):
                 'jobtype': job.inputdata.jobtype 
                }
         """
-        logger.info('spec = %s ' % spec)
+        logger.debug('spec = %s ' % spec)
         #spec = {'workflow': 'crab_20140129_174310', 'cacheurl': 'https://cmsweb.cern.ch/crabcache/file', 'publishname': '161f88b7224ebec344e685476aab1797', 'savelogsflag': 0, 'nonprodsw': 0, 'tfileoutfiles': [], 'asyncdest': 'T2_IT_Pisa', 'oneEventMode': 0, 'algoargs': 10, 'totalunits': 0, 'cachefilename': 'b813537a3eded4fb83426fa1e0d0fd6f09fe17f344371d1ad5d64607e3a1c44e.tar.gz', 'jobarch': 'slc5_amd64_gcc462', 'publication': 0, 'splitalgo': 'FileBased', 'jobsw': 'CMSSW_5_3_4', 'dbsurl': 'http://cmsdbsprod.cern.ch/cms_dbs_prod_global/servlet/DBSServlet', 'addoutputfiles': [], 'edmoutfiles': ['myroot.root'], 'adduserfiles': [], 'inputdata': '/GenericTTbar/HC-CMSSW_5_3_1_START53_V5-v1/GEN-SIM-RECO', 'jobtype': 'Analysis'}
 
         try:
             dictresult, status, reason = server.put( resource, data = self._encodeRequest(spec) )
-            logger.info("dictresult %s, status %s, reason: %s" % (dictresult, status,reason))
+            logger.debug("dictresult %s, status %s, reason: %s" % (dictresult, status,reason))
             job.backend.taskname = dictresult['result'][0]['RequestName']
             return True
         except HTTPException, e:
@@ -344,7 +359,7 @@ class CRABServer(GangaObject):
             logger.error(e.status)
             logger.error(e.url)
             logger.error(e.args)
-            raise e
+            raise CRABServerError("Error submitting task")
 
         return False
 
@@ -362,10 +377,6 @@ class CRABServer(GangaObject):
         #from RESTInteractions import HTTPRequests
 
         logger.info('checkin status')
-        #srv='hammer-crab3.cern.ch'#'cmsweb-testbed.cern.ch'
-        #proxypath= '/afs/cern.ch/user/r/riahi/public/proxy' #'/afs/cern.ch/user/s/spiga/public/PerValentaina/proxy'
-        #resource='/crabserver/dev/workflow'
-        #server = HTTPRequests(srv, proxypath)
 
         try:
             server = HTTPRequests(job.backend.server_name, job.backend.userproxy)

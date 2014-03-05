@@ -75,7 +75,7 @@ class CRABBackend(IBackend):
                 #for subjob in job.subjobs:
                 #    subjob.rollbackToNewState()
                 #job.updateMasterJobStatus()
-                logger.info('All subjobs have been reverted to "new".')
+                #logger.info('All subjobs have been reverted to "new".')
                 return False
 
             # This will perform a crab -status and parse the XML.
