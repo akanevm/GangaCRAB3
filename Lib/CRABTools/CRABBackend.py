@@ -11,7 +11,7 @@ from xml.dom.minidom import parse
 
 import datetime
 import os
-
+import sys
 
 logger = getLogger()
 
@@ -136,8 +136,10 @@ class CRABBackend(IBackend):
 
         try:
             server.kill(job)    
-        except:
+        except Exception as e:
             logger.warning('Killing the job using CRAB failed.')
+            logger.warning(e)
+            logger.warning(sys.exc_info()[0])
             return 1
 
         if len(job.subjobs):

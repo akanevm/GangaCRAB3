@@ -404,6 +404,7 @@ class CRABServer(GangaObject):
 
     def kill(self, job):
         """Kill all the jobs on the task."""
+        """
         if not os.path.exists(job.inputdata.ui_working_dir):
             raise CRABServerError('Workdir "%s" not found.' %
                                   job.inputdata.ui_working_dir)
@@ -415,6 +416,28 @@ class CRABServer(GangaObject):
                                            job.inputdata.ui_working_dir)
         self._send_with_retry(cmd, 'kill', job.backend.crab_env)
         return True
+        """
+        try:
+            server = HTTPRequests(job.backend.server_name, job.backend.userproxy)
+            resource = job.backend.apiresource+'workflow'
+            dictresult, status, reason = server.delete(resource, data = urllib.urlencode({ 'workflow' : job.backend.taskname}))
+            logger.info("Kill answer: %s" % status)
+            logger.info("Kill dictresult: %s" % dictresult)
+            return True
+        except HTTPException, e:
+            logger.error(type(e))
+            logger.error(e.req_headers)
+            logger.error(e.req_data)
+            logger.error(e.reason)
+            logger.error(e.message)
+            logger.error(e.headers)
+            logger.error(e.result)
+            logger.error(e.status)
+            logger.error(e.url)
+            logger.error(e.args)
+            raise e
+
+
 
     def resubmit(self, job):
         """Resubmit an already created job."""
