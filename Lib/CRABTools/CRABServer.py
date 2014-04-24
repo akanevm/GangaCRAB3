@@ -2,7 +2,7 @@ from Ganga.GPIDev.Base import GangaObject
 from Ganga.GPIDev.Schema import Schema, Version
 from Ganga.Utility.logging import getLogger
 #from GangaCMS.Lib.CRABTools.CRABServerError import CRABServerError
-#from origRemoteCopy import remote_copy as remoteCopy
+from origRemoteCopy import remote_copy as remoteCopy
 from RESTInteractions import HTTPRequests
 from httplib import HTTPException
 
@@ -17,6 +17,8 @@ import sys
 import json
 import hashlib
 from optparse import OptionParser, OptionGroup
+import tarfile
+
 
 logger = getLogger()
 
@@ -466,7 +468,7 @@ class CRABServer(GangaObject):
             for f in files:
                 os.chmod(os.path.join(root, f), 0644)
         """
-        logger.info('geting Output for jon %s:%s' % (job.backend.taskname, job.backend.crabid)) 
+        logger.info('getting Output for job %s:%s' % (job.backend.taskname, job.backend.crabid)) 
         inputlist =  [  ('workflow', job.backend.taskname)]
         inputlist.extend([('subresource', 'logs')])
         inputlist.extend( [('jobids', job.backend.crabid)] )
@@ -481,22 +483,32 @@ class CRABServer(GangaObject):
         resource = job.backend.apiresource+'workflow'
 
         try:
+            import sys, traceback
             dictresult, status, reason = server.get(resource, data = inputlist)
+            input = dictresult['result']
+            rcopy = remoteCopy(input, job.outputdir, logger)
+            rcopy()
+            logger.info("Task: %s - subjob: %s output copied" % (job.backend.taskname, job.backend.crabid))
+            tfile = tarfile.open(os.path.join(job.outputdir, "cmsRun_%s.log.tar.gz" % job.backend.crabid))
+            tfile.extractall(job.outputdir)
 
         except HTTPException, e:
-            print type(e)
-            print dir(e)
-            print e.req_headers
-            print e.req_data
-            print e.reason
-            print e.message
-            print e.headers
-            print e.result
-            print e.status
-            print e.url
-            print e.args
+            msg = type(e)
+            msg += " "+dir(e)
+            msg += " "+e.req_headers
+            msg += " "+e.req_data
+            msg += " "+e.reason
+            msg += " "+e.message
+            msg += " "+e.headers
+            msg += " "+e.result
+            msg += " "+e.status
+            msg += " "+e.url
+            msg += " "+e.args
+            logger.error(msg)
+        except Exception as e:
+            traceback.print_exc(file=sys.stdout)
+            raise e
 
-            #sys.exit(1)
         logger.info('dictresult: %s' % dictresult)
         #input = [{u'checksum': {u'adler32': u'6d1096fe', u'cksum': 3701783610, u'md5': u'6d1096fe'}, u'size': 213441, u'pfn': u'srm://srm.ihepa.ufl.edu:8443/srm/v2/server?SFN=/cms/data/store/temp/user/spiga.75e763e2996c16e51aadd11c9203b9b48af92491/GenericTTbar/140207_160506_crab_20140129_174310/161f88b7224ebec344e685476aab1797/0000/log/cmsRun_6.log.tar.gz'}]
         #rcopy = remoteCopy(input, job.inputdata.ui_working_dir, logger)
