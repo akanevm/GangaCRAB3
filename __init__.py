@@ -25,12 +25,21 @@ configMetrics.addOption('location','%s/GangaGRAB3/metrics.ini'%(ganga_pythonpath
 dscrpt = 'The version CRAB used for job submission.'
 configCMSSW.addOption('CRAB_VERSION','CRAB_2_7_5',dscrpt)
 """
+config = Ganga.Utility.Config.getConfig('System')
+ganga_pythonpath = "/data/hc/external/ganga/install/HEAD/python" #config['GANGA_PYTHONPATH']
+
+configMetrics = Ganga.Utility.Config.makeConfig('Metrics','List of desired metrics.')
+dscrpt = 'The location of the metrics.cms list.'
+configMetrics.addOption('location','%s/GangaGRAB3/metrics.ini'%(ganga_pythonpath),dscrpt)
+
 
 def getEnvironment( config = {} ):
     import sys
     import os.path
     import os
     import PACKAGE
+
+    PACKAGE.standardSetup()
 
     #config = Ganga.Utility.Config.getConfig('CRAB3')
     #for el in config:
