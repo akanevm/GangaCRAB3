@@ -42,8 +42,8 @@ class CRABBackend(IBackend):
     def __init__(self):
         logger.info("crabbackend init")
         super(CRABBackend, self).__init__()
-        config = Config.getConfig('CMSSW')
-        shell = Shell(os.path.join(config['CMSSW_SETUP'], 'CMSSW_generic.sh')) 
+        #config = Config.getConfig('CMSSW')
+        #shell = Shell(os.path.join(config['CMSSW_SETUP'], 'CMSSW_generic.sh')) 
         #shell = Shell(os.path.join(config['CMSSW_SETUP'], 'CMSSW_generic.sh'),
         #              [config['CMSSW_VERSION'], config['CRAB_VERSION']])
         self.crab_env = shell.env
@@ -419,6 +419,7 @@ class CRABBackend(IBackend):
                             sj = Job()
                             sj.copyFrom(j)
                             sj.backend.crabid = index
+                            sj.inputdata = None
                             sj.id = i
                             sj.updateStatus('submitting')
                             sj.backend.checkReport(subjob)
