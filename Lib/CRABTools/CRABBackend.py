@@ -308,7 +308,7 @@ class CRABBackend(IBackend):
                             if name:
                                 job.backend.fjr[section][name] = metric.getAttribute("Value")
 
-        logger.info(fjr)
+        #logger.debug(job.backend.fjr)
         return True    
 
     def checkReport(self, report):
@@ -385,13 +385,12 @@ class CRABBackend(IBackend):
         elif status=='finished':
             if job.status in ['submitting']:
                 job.updateStatus('submitted')
-            else:
+            elif job.status not in['completed']:
+                job.updateStatus('completed')
                 logger.info('retrieving job output for job %s' % job.id) 
                 #server = CRABServer()
                 #server.getOutput(job)
-                success = job.backend.parseResults()
-                if success: 
-                    job.updateStatus('completed')
+                job.backend.parseResults()
   
 
         """
