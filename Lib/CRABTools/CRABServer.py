@@ -313,7 +313,8 @@ class CRABServer(GangaObject):
                 spec[field] = getattr(job.inputdata, field)
 
         spec['cachefilename'] = cachefilename
-       
+        spec['cacheurl'] = 'https://cmsweb.cern.ch/crabcache'         
+
         if job.backend.asyncdest:
             spec['asyncdest'] = job.backend.asyncdest
  
