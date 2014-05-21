@@ -45,8 +45,8 @@ class CRABBackend(IBackend):
     def __init__(self):
         logger.info("crabbackend init")
         super(CRABBackend, self).__init__()
-        config = Config.getConfig('CMSSW')
-        shell = Shell(os.path.join(config['CMSSW_SETUP'], 'CMSSW_generic.sh')) 
+        #config = Config.getConfig('CMSSW')
+        #shell = Shell(os.path.join(config['CMSSW_SETUP'], 'CMSSW_generic.sh')) 
         #shell = Shell(os.path.join(config['CMSSW_SETUP'], 'CMSSW_generic.sh'),
         #              [config['CMSSW_VERSION'], config['CRAB_VERSION']])
         #self.crab_env = shell.env
@@ -307,8 +307,9 @@ class CRABBackend(IBackend):
                             name = config.get(section,name)
                             if name:
                                 job.backend.fjr[section][name] = metric.getAttribute("Value")
-
-        #logger.debug(job.backend.fjr)
+ 
+        logger.info("Parsed output for job %s" % job.backend.crabid)
+        logger.info(job.backend.fjr)
         return True    
 
     def checkReport(self, report):
