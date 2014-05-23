@@ -387,11 +387,9 @@ class CRABBackend(IBackend):
             if job.status in ['submitting']:
                 job.updateStatus('submitted')
             elif job.status not in['completed']:
+                job.backend.parseResults()
                 job.updateStatus('completed')
                 logger.info('retrieving job output for job %s' % job.id) 
-                #server = CRABServer()
-                #server.getOutput(job)
-                job.backend.parseResults()
   
 
         """
