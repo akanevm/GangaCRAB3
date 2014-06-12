@@ -13,6 +13,9 @@ import datetime
 import os
 import sys
 
+from Ganga.GPIDev.Lib.Job.Job import Job
+import sys, traceback
+ 
 logger = getLogger()
 
 
@@ -46,7 +49,7 @@ class CRABBackend(IBackend):
         #shell = Shell(os.path.join(config['CMSSW_SETUP'], 'CMSSW_generic.sh')) 
         #shell = Shell(os.path.join(config['CMSSW_SETUP'], 'CMSSW_generic.sh'),
         #              [config['CMSSW_VERSION'], config['CRAB_VERSION']])
-        self.crab_env = shell.env
+        #self.crab_env = shell.env
 
         config = Config.getConfig('CRAB_CFG')
         self.server_name = config['server_name']
@@ -54,6 +57,7 @@ class CRABBackend(IBackend):
         self.userproxy = config['userproxy']
         self.asyncdest = config['asyncdest']
         logger.info("asyncdest %s" % self.asyncdest )
+        #self.server = CRABServer()
 
 
     def master_submit(self, rjobs, subjobconfigs, masterjobconfig):
@@ -175,6 +179,7 @@ class CRABBackend(IBackend):
 
     def parseResults(self):
 
+        """
         job = self.getJobObject()   
 
         server = CRABServer()
@@ -243,7 +248,69 @@ class CRABBackend(IBackend):
                             name = config.get(section,name)
                             if name:
                                 job.backend.fjr[section][name] = metric.getAttribute("Value")
+        """
+        job = self.getJobObject()   
+        
+        server = CRABServer()
+        try:
+            server.getOutput(job) 
+        except Exception as e:
+            logger.error(e)
+            logger.error('Could not get the output of the job.')
+            return False
+            # Let's not raise this yet (in case of a double call).
+            # raise CRABServerError('Impossible to get the output of the job')
 
+        workdir = job.outputdir
+        index = job.backend.crabid
+        doc_path = '%s/FrameworkJobReport-%d.xml'%(workdir,index)
+
+        if not os.path.exists(doc_path):
+            logger.error('FJR %s not found.'%(doc_path))
+            return False
+
+        try:
+            doc = parse(doc_path)   
+        except:
+            logger.error("Could not parse document. File not present?")
+            return False
+        status = doc.firstChild.getAttribute("Status")
+
+        config = Config.getConfig('Metrics')
+        location = config['location']
+        if not os.path.exists(location):
+            raise BackendError(0,'Location %s file doesnt exist.'%(location))
+
+        config = ConfigParser()
+        config.read(location)      
+
+        #Iterate over all them
+        SECTIONS = config.sections()
+        if 'report' in SECTIONS:
+            SECTIONS.remove('report')
+
+        # Only five sections work here...
+        for section in SECTIONS:
+
+            if not job.backend.fjr.has_key(section):
+                job.backend.fjr[section] = {}
+
+            for performancereport in doc.getElementsByTagName("PerformanceReport"):
+                performancesummary = performancereport.getElementsByTagName("PerformanceSummary")[0]
+                if performancesummary.getAttribute("Metric") == section:
+                    metrics = performancesummary.getElementsByTagName("Metric")
+                    for metric in metrics:
+                        name = metric.getAttribute("Name")
+                        if config.has_option(section,name):
+                            # Due to the names with minus intead of underscore, we have to do thiw walkarround
+                            # to send them to the DB.
+                            name = config.get(section,name)
+                            if name:
+                                job.backend.fjr[section][name] = metric.getAttribute("Value")
+ 
+        logger.info("Parsed output for job %s" % job.backend.crabid)
+        logger.info(job.backend.fjr)
+        return True    
 
     def checkReport(self, report):
 
@@ -319,11 +386,10 @@ class CRABBackend(IBackend):
         elif status=='finished':
             if job.status in ['submitting']:
                 job.updateStatus('submitted')
-            else:
-                #server = CRABServer()
-                #server.getOutput(job)
-                #logger.info('got job output')
+            elif job.status not in['completed']:
+                job.backend.parseResults()
                 job.updateStatus('completed')
+                logger.info('retrieving job output for job %s' % job.id) 
   
 
         """
@@ -388,11 +454,8 @@ class CRABBackend(IBackend):
         """Updates the statuses of the list of jobs provided by issuing crab -status."""
         logger.info('Updating the monitoring information of ' + str(len(jobs)) + ' jobs')
         try:
-            from Ganga.GPIDev.Lib.Job.Job import Job
-            import sys, traceback
- 
+            server = CRABServer()
             for j in jobs:
-                server = CRABServer()
                 logger.debug('Updating monitoring information for job %d (%s)' % (j.id, j.status))
                 try:
                     dictresult, status, reason = server.status(j)
@@ -426,7 +489,7 @@ class CRABBackend(IBackend):
                             sj.backend.checkStatus()
                             j.subjobs.append(sj)
                         #j.subjobs = sorted(j.subjobs, key=lambda x: x.backend.id) 
-                        #j._commit()  
+                        #j._commit()
                     else:
                         for subjob in joblist:
                             index  = int(subjob[1])
@@ -434,7 +497,8 @@ class CRABBackend(IBackend):
                             j.subjobs[index-1].backend.checkReport(subjob)                   
                             j.subjobs[index-1].backend.checkStatus()
 
-                    j.updateMasterJobStatus()
+                    j.updateStatus('running')
+                    #j.updateMasterJobStatus()
                 else:
                     logger.info('There are no subjobs for job %s' % (j.id))
                     logger.info('checking task status from report: %s' % dictresult['result'][0]['status'])

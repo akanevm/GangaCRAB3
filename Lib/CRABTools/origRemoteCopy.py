@@ -273,7 +273,7 @@ def processWorker(input, results):
 
         command = work
         pipe = subprocess.Popen(command, stdout = subprocess.PIPE,
-                                 stderr = subprocess.PIPE, shell = True)
+                                 stderr = subprocess.PIPE, shell = True, bufsize=-1, close_fds=True)
         stdout, stderr = pipe.communicate()
 
         results.put( {
