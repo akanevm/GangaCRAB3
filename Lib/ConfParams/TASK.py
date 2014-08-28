@@ -81,7 +81,7 @@ class TASK(GangaObject):
     schemadic['maxmemory']       = SimpleItem(defvalue=None, typelist=['type(None)','int'], doc='')
     schemadic['priority']        = SimpleItem(defvalue=None, typelist=['type(None)','int'], doc='')
     schemadic['lfnprefix']       = SimpleItem(defvalue=None, typelist=['type(None)','str'], doc='')
-    schemadic['saveoutput']      = SimpleItem(defvalue=None, typelist=['type(None)','str'], doc='')
+    schemadic['saveoutput']      = SimpleItem(defvalue=None, typelist=['type(None)','int'], doc='')
     schemadic['faillimit']       = SimpleItem(defvalue=None, typelist=['type(None)','int'], doc='')
     schemadic['ignorelocality']  = SimpleItem(defvalue=None, typelist=['type(None)','int'], doc='')
 
