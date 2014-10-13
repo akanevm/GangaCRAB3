@@ -257,7 +257,6 @@ class CRABServer(GangaObject):
         except HTTPException, e:
             logger.error(type(e))
             logger.error(dir(e))
-            logger.error(e.req_headers)
             logger.error(e.req_data)
             logger.error(e.reason)
             logger.error(e.message)
@@ -305,7 +304,9 @@ class CRABServer(GangaObject):
                       'faillimit',
                       'ignorelocality',
                       'inputdata',
-                      'publishdbsurl'
+                      'publishdbsurl',
+                      'activity',
+                      'extrajdl'
                      ]
         spec = {}
         for field in specFields:
@@ -314,6 +315,12 @@ class CRABServer(GangaObject):
 
         spec['cachefilename'] = cachefilename
         spec['cacheurl'] = 'https://cmsweb.cern.ch/crabcache'         
+
+        if spec['extrajdl']:
+            extrajdl = ""
+            for value in spec['extrajdl']:
+                extrajdl += value
+            spec['extrajdl'] = extrajdl
 
         if job.backend.asyncdest:
             spec['asyncdest'] = job.backend.asyncdest
