@@ -316,11 +316,14 @@ class CRABServer(GangaObject):
         spec['cachefilename'] = cachefilename
         spec['cacheurl'] = 'https://cmsweb.cern.ch/crabcache'         
 
-        if spec['extrajdl']:
+        try:
+            extrajdlfields = spec['extrajdl']
             extrajdl = ""
-            for value in spec['extrajdl']:
+            for value in extrajdlfields:
                 extrajdl += value
             spec['extrajdl'] = extrajdl
+        except KeyError:
+            pass
 
         if job.backend.asyncdest:
             spec['asyncdest'] = job.backend.asyncdest
