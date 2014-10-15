@@ -1,6 +1,7 @@
 from Ganga.GPIDev.Base import GangaObject
 from Ganga.GPIDev.Schema import Schema, Version
 from Ganga.Utility.logging import getLogger
+from Ganga.Utility import Config
 #from GangaCMS.Lib.CRABTools.CRABServerError import CRABServerError
 from origRemoteCopy import remote_copy as remoteCopy
 from RESTInteractions import HTTPRequests
@@ -312,6 +313,11 @@ class CRABServer(GangaObject):
         for field in specFields:
             if getattr(job.inputdata, field) not in [None, [None]]:
                 spec[field] = getattr(job.inputdata, field)
+
+        config = Config.getConfig('TASK_CFG')
+        for field in config:
+            if field in specFields and config[field]:
+                spec[field] = config[field]
 
         spec['cachefilename'] = cachefilename
         spec['cacheurl'] = 'https://cmsweb.cern.ch/crabcache'         
