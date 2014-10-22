@@ -114,7 +114,11 @@ class CRABServer(GangaObject):
             print ("Failed to upload source files: %s" % str(result))
             sys.exit(1)
         
-        os.remove(archiveName) 
+        try:
+            os.remove(archiveName)
+        except OSError:
+            logger.warning('Archive not found while trying to delete it.')        
+     
         return url, str(result['hashkey']) + '.tar.gz', checksum
 
     def uploadFile(self, fileName, url, fieldName = 'file1', params = [], verb = 'POST'):
