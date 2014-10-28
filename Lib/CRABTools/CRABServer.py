@@ -250,10 +250,12 @@ class CRABServer(GangaObject):
         logger.info('apiresource: %s' % job.backend.apiresource)
 
         server = HTTPRequests(job.backend.server_name, job.backend.userproxy)
-        resource = job.backend.apiresource+'workflow'
+        resource = job.backend.apiresource+'workflow'        
+  
+        user_cache_server = job.inputdata.cacheurl+'/file'
         
         try:
-            cachefilename = self.uploadArchive(job.inputdata.pset, job.inputdata.cacheurl)[1]
+            cachefilename = self.uploadArchive(job.inputdata.pset, user_cache_server)[1]
         except HTTPException, e:
             logger.error(type(e))
             logger.error(dir(e))

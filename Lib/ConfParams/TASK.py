@@ -47,7 +47,7 @@ class TASK(GangaObject):
     schemadic['workflow']        = SimpleItem(defvalue=None, typelist=['type(None)','str'], doc='')
     schemadic['inputdata']       = SimpleItem(defvalue=None, typelist=['type(None)','str'], doc='')
     schemadic['pset']            = SimpleItem(defvalue=None, typelist=['type(None)','str'], doc='') 
-    schemadic['cacheurl']        = SimpleItem(defvalue=None, typelist=['type(None)','str'], doc='')
+    #schemadic['cacheurl']        = SimpleItem(defvalue=None, typelist=['type(None)','str'], doc='')
     schemadic['cachefilename']   = SimpleItem(defvalue=None, typelist=['type(None)','str'], doc='')
     schemadic['publishname']     = SimpleItem(defvalue=None, typelist=['type(None)','str'], doc='')
     schemadic['savelogsflag']    = SimpleItem(defvalue=None, typelist=['type(None)','int'], doc='')

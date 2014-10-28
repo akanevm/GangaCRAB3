@@ -21,6 +21,8 @@ class CRAB(GangaObject):
     schemadic['server_name']    = SimpleItem(defvalue=None, typelist=['type(None)','str'], doc='')
     schemadic['apiresource']    = SimpleItem(defvalue=None, typelist=['type(None)','str'], doc='')
     schemadic['userproxy']      = SimpleItem(defvalue=None, typelist=['type(None)','str'], doc='')
+    schemadic['cacheurl']        = SimpleItem(defvalue=None, typelist=['type(None)','str'], doc='')
+    schemadic['user_cache_apiresource']      = SimpleItem(defvalue=None, typelist=['type(None)','str'], doc='')
     schemadic['ui_working_dir'] = SimpleItem(defvalue=None, typelist=['type(None)','str'], doc=_comments[3])
     schemadic['crab3_setup_script']    = SimpleItem(defvalue=None, typelist=['type(None)','str'], doc='')
     schemadic['asyncdest']      = SimpleItem(defvalue=None, typelist=['type(None)','str'], doc='')

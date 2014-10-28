@@ -45,7 +45,8 @@ class HTTPRequests(dict):
         that a sub class can override it to have different type of connection
         i.e. - if it needs authentication, or some fancy handler
         """
-        return RequestHandler()
+        conf = {'connecttimeout': 100}
+        return RequestHandler(config)
 
     def get(self, uri = None, data = {}):
         """

@@ -28,11 +28,10 @@ class CRABBackend(IBackend):
     schemadic['statusLog'] = SimpleItem(defvalue=0,
                                         typelist=['int'],
                                         doc='Set to 1 to keep -status logs')
-    schemadic['report'] = SimpleItem(defvalue={})
     schemadic['fjr'] = SimpleItem(defvalue={})
-    schemadic['crab_env'] = SimpleItem(defvalue={})
     schemadic['taskname'] = SimpleItem(defvalue=None, typelist=['type(None)', 'str'], doc='taskname of the master job')
     schemadic['crabid'] = SimpleItem(defvalue=None, typelist=['type(None)', 'str'], doc='id of the crab task subjob')
+    schemadic['crabstatus'] SimpleItem(defvalue=None, typelist=['type(None)', 'str'], doc='status of the job in CRAB')
     schemadic['server_name']    = SimpleItem(defvalue=None, typelist=['type(None)','str'], doc='')
     schemadic['apiresource']    = SimpleItem(defvalue=None, typelist=['type(None)','str'], doc='')
     schemadic['userproxy']      = SimpleItem(defvalue=None, typelist=['type(None)','str'], doc='')
@@ -45,11 +44,6 @@ class CRABBackend(IBackend):
     def __init__(self):
         logger.info("crabbackend init")
         super(CRABBackend, self).__init__()
-        config = Config.getConfig('CMSSW')
-        shell = Shell(os.path.join(config['CMSSW_SETUP'], 'CMSSW_generic.sh')) 
-        #shell = Shell(os.path.join(config['CMSSW_SETUP'], 'CMSSW_generic.sh'),
-        #              [config['CMSSW_VERSION'], config['CRAB_VERSION']])
-        #self.crab_env = shell.env
 
         config = Config.getConfig('CRAB_CFG')
         self.server_name = config['server_name']
@@ -62,40 +56,21 @@ class CRABBackend(IBackend):
 
     def master_submit(self, rjobs, subjobconfigs, masterjobconfig):
         """Perform de submission of the master job (the CRAB task)."""
-        logger.info("in master_submit rjobs[0]: %s" % rjobs[0]) 
 
         job = self.getJobObject()
          
         if rjobs[0]:
-            #job = rjobs[0]#.master
-            #for subjob in job.subjobs:
-            #    subjob.updateStatus('submitting')
 
             try:
                 server = CRABServer()
                 server.submit(job)
             except CRABServerError:
                 logger.error('Submission through CRAB failed.')
-                #for subjob in job.subjobs:
-                #    subjob.rollbackToNewState()
-                #job.updateMasterJobStatus()
-                #logger.info('All subjobs have been reverted to "new".')
                 return False
 
             # This will perform a crab -status and parse the XML.
             self.master_updateMonitoringInformation((job,))
 
-            # Forcing all the jobs to be submitted, so the monitoring loops
-            # keeps issuing calls after to update.
-            #for subjob in job.subjobs:
-            #    if subjob.status in ('submitting'):
-            #        subjob.updateStatus('submitted')
-            
-            #dictresult, status, reason = CRABServer().status(job)
-            #jobList = dictresult['result'][0]['jobList']
-
-
-            #job.updateMasterJobStatus()
         else:
             logger.warning('Not submitting job without subjobs.')
 
@@ -161,7 +136,7 @@ class CRABBackend(IBackend):
         except:
             logger.warning('Get job status from CRAB failed. Job may have not be killed.')
 
-        return 1
+        return True
 
     def postMortem(self,job):
 
@@ -179,76 +154,8 @@ class CRABBackend(IBackend):
 
     def parseResults(self):
 
-        """
-        job = self.getJobObject()   
+        """ Retrieve the CRAB job log, parse the FrameworkJobReport and save the fields specified in the metrics config in the job.backend.fwjr fields """
 
-        server = CRABServer()
-        try:
-            server.status(job)
-            server.getOutput(job) 
-        except:
-            logger.error('Could not get the output of the job.')
-            # Let's not raise this yet (in case of a double call).
-            # raise CRABServerError('Impossible to get the output of the job')
-
-        workdir = job.inputdata.ui_working_dir
-        index = int(job.id) + 1
-        doc_path = '%s/res/crab_fjr_%d.xml'%(workdir,index)
-
-        if not os.path.exists(doc_path):
-            logger.error('FJR %s not found.'%(doc_path))
-            return
-
-        try:
-            doc = parse(doc_path)   
-        except:
-            logger.error("Could not parse document. File not present?")
-            return
-        status = doc.firstChild.getAttribute("Status")
-
-        if status in ["Failed"]:
-            self.postMortem(job)
-            job.updateStatus('failed')
-        elif status in ["Success"]:
-            if job.status == 'submitting':
-                job.updateStatus('submitted')
-            job.updateStatus('completed')
-        else:
-            logger.warning("UNKNOWN PARSE STATUS: "+str(status))
-
-        config = Config.getConfig('Metrics')
-        location = config['location']
-        if not os.path.exists(location):
-            raise BackendError(0,'Location %s file doesnt exist.'%(location))
-
-        config = ConfigParser()
-        config.read(location)      
-
-        #Iterate over all them
-        SECTIONS = config.sections()
-        if 'report' in SECTIONS:
-            SECTIONS.remove('report')
-
-        # Only five sections work here...
-        for section in SECTIONS:
-
-            if not job.backend.fjr.has_key(section):
-                job.backend.fjr[section] = {}
-
-            performancereport = doc.getElementsByTagName("PerformanceReport")[0]
-            performancesummary = performancereport.getElementsByTagName("PerformanceSummary")
-            for pfs in performancesummary:
-                if pfs.getAttribute("Metric") == section:
-                    metrics = pfs.getElementsByTagName("Metric")
-                    for metric in metrics:
-                        name = metric.getAttribute("Name")
-                        if config.has_option(section,name):
-                            # Due to the names with minus intead of underscore, we have to do thiw walkarround
-                            # to send them to the DB.
-                            name = config.get(section,name)
-                            if name:
-                                job.backend.fjr[section][name] = metric.getAttribute("Value")
-        """
         job = self.getJobObject()   
         
         server = CRABServer()
@@ -279,7 +186,7 @@ class CRABBackend(IBackend):
         config = Config.getConfig('Metrics')
         location = config['location']
         if not os.path.exists(location):
-            raise BackendError(0,'Location %s file doesnt exist.'%(location))
+            logger.error('Location %s file doesnt exist.'%(location)
 
         config = ConfigParser()
         config.read(location)      
@@ -289,7 +196,7 @@ class CRABBackend(IBackend):
         if 'report' in SECTIONS:
             SECTIONS.remove('report')
 
-        # Only five sections work here...
+        # Only two sections work here...
         for section in SECTIONS:
 
             if not job.backend.fjr.has_key(section):
@@ -311,149 +218,36 @@ class CRABBackend(IBackend):
         logger.info(fjr)
         return True    
 
-    def checkReport(self, report):
-
-        job = self.getJobObject()     
-        """
-        config = Config.getConfig('Metrics')
-        location = config['location']
-        if not os.path.exists(location):
-            raise BackendError(0,'Location %s file doesnt exist.'%(location))
-
-        config = ConfigParser()
-        config.read(location)      
-
-        PARAMS = [('status','status')]
-
-        if config.has_section('report'):
-            PARAMS += config.items('report')
-        else:
-            logger.warning('No report in metrics')
-
-        for n,v in PARAMS:
-            if v:
-                job.backend.report[v] = jobDoc.getAttribute(v)
-        """
-        job.backend.report['status'] = report[0]
 
     def checkStatus(self):
 
         GANGA_S = ['completed','failed','killed','new','running','submitted','submitting']
-        STATUS  = {'A':'aborted',
-                   'C':'created',
-                   'CS':'created on the server',
-                   'DA':'failed',
-                   'E':'cleared',
-                   'K':'killed',
-                   'R':'running',
-                   'SD':'done',
-                   'SR':'ready',
-                   'S':'submitted on the server',
-                   'SS':'scheduled',
-                   'SU':'submitted',
-                   'SW':'waiting',
-                   'W':'declared',
-                   'UN':'undefined',
-                   }
+
+        map = {'cooloff': 'submitted',
+               'unsubmitted': 'submitted', 
+               'idle': 'submitted',
+               'running': 'running', 
+               'trasferring': 'running',
+               'failed': 'failed', 
+               'held': 'failed',
+               'finished': 'completed'}
 
         job = self.getJobObject()
         try:
-            status = job.backend.report['status']
+            status = job.backend.crabstatus
             logger.debug('job status: %s' % status)      
         except:
             logger.warning('Missing the status for the job %d while checking' % job.id)
             return
 
-        #if status in ['cooloff'] and job.status not in ['submitting']:
-        #    job.updateStatus('submitting')
+        
+        job.updateStatus(map[status])
+        if map[status] == 'completed' 
+            success = job.backend.parseResults()
 
-        if status in ['cooloff', 'unsubmitted', 'idle'] and job.status not in ['submitted']:
-            job.updateStatus('submitted')
-
-        elif status in ['running', 'trasferring']:
-            if job.status in ['submitting']:
-                job.updateStatus('submitted')
-            elif job.status not in ['running']:
-                job.updateStatus('running')
-
-        elif status in ['failed', 'held']:
-            if job.status in ['submitting']:
-                job.updateStatus('submitted')
-            elif job.status not in ['failed']:
-                job.updateStatus('failed')
-
-        elif status=='finished':
-            if job.status in ['submitting']:
-                job.updateStatus('submitted')
-            else:
-                logger.info('retrieving job output for job %s' % job.id) 
-                #server = CRABServer()
-                #server.getOutput(job)
-                success = job.backend.parseResults()
-                if success: 
-                    job.updateStatus('completed')
-  
-
-        """
-        if status=='R' and job.status != 'killed':
-            if job.status in ['submitting','new']:
-                # The job has to pass by this status at least once.
-                job.updateStatus('submitted')
-            elif job.status != 'running':
-                # A job could come from the died (i.e. completed -> running).
-                job.updateStatus('running')
-        elif status in ['UN','C','CS','W'] and job.status not in ['submitting','new','killed']:
-            logger.warning('The job is an invalid status (%s - %s), it will  be reverted.' % (status, job.status))
-            job.rollbackToNewState()
-        elif status in ['SU','S','SR','SS','SW'] and job.status not in ['submitted','killed']:
-            job.updateStatus('submitted')
-        elif status == 'SD' and job.status not in ['completed','failed','killed']:
-            logger.info('Retrieving %d.'%(job.id))
-            job.backend.parseResults()
-            # The job can be done, but failed...
-            # So, let's update the status retrieved from the output file.
-            if job.status not in ['completed','failed','killed']:
-                logger.warning('Processing a done job ended in not final status. Parhaps the output getting failed?')
-        elif status in ['A','DA'] and job.status not in ['failed','killed']:
-            self.postMortem(job)
-            job.updateStatus('failed')
-        elif status == 'K' and job.status not in ['killed']:
-            job.updateStatus('killed')
-        elif status == 'E' and job.status not in ['completed','failed','killed']:
-            logger.info('Job %d has been purged.'%(job.id))
-            job.backend.parseResults()
-            # We have to set this now (can be repeated) in case output retrieval fails.
-            if job.status not in ['completed','failed','killed']:
-                self.postMortem(job)
-                job.updateStatus('failed')
-        else:
-            if not STATUS.has_key(status):  
-                logger.warning('UNKNOWN STATUS: ' + str(status))
-
-        # Check the CRAB created jobs that are set as submitted... for a timeout
-        if status in ['C','CS','W'] and job.status in ['submitted']:
-            try:
-                # If submission time is more than one hour ago, a problem happened...
-                if datetime.datetime.utcnow() - job.time.timestamps['submitted'] > datetime.timedelta(hours=0.5):
-                    logger.info('Submission for job %d failed (timeout).' % job.id)
-                    job.updateStatus('failed')
-            except:
-                logger.warning('Error while retrieving submit time for job %d.' % job.id)
-        """
-
-    def checkMasterStatus(self, status):
-        loger.info(status)
-        job = self.getJobObject()
-        if status in ['NEW', 'QUEUED']:
-            job.updateStatus('submitting')
-        elif status in ['SUBMITTED']:
-            job.updateStatus('submitted')
-        elif status in ['FAILED']:
-            logger.info('about to put at failed')
-            job.updateStatus('failed')
 
     def master_updateMonitoringInformation(jobs):
-        """Updates the statuses of the list of jobs provided by issuing crab -status."""
+        """Updates the statuses of the list of jobs retrieved by requesting the task status through the  CRAB3 server REST """
         logger.info('Updating the monitoring information of ' + str(len(jobs)) + ' jobs')
         try:
             server = CRABServer()
@@ -486,20 +280,20 @@ class CRABBackend(IBackend):
                             sj.backend.crabid = index
                             sj.inputdata = None
                             sj.id = i
-                            sj.updateStatus('submitting')
-                            sj.backend.checkReport(subjob)
+                            sj.updateStatus('submitted')
+                            sj.backend.crabstatus = subjob[0]
                             sj.backend.checkStatus()
                             j.subjobs.append(sj)
                         #j.subjobs = sorted(j.subjobs, key=lambda x: x.backend.id) 
-                        #j._commit()
+                        j._commit()
+                        j.updateStatus('running')
                     else:
                         for subjob in joblist:
                             index  = int(subjob[1])
                             logger.debug('Found subjob %s searching with index %s' % (j.subjobs[index-1].backend.crabid, index))
-                            j.subjobs[index-1].backend.checkReport(subjob)                   
+                            j.subjobs[index-1].backend.crabstatus = subjob[0]                   
                             j.subjobs[index-1].backend.checkStatus()
 
-                    j.updateStatus('running')
                     #j.updateMasterJobStatus()
                 else:
                     logger.info('There are no subjobs for job %s' % (j.id))
