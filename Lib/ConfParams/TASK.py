@@ -67,7 +67,7 @@ class TASK(GangaObject):
     schemadic['edmoutfiles']     = SimpleItem(defvalue=[None], typelist=['type(None)','str'], sequence = 1, doc='')
     schemadic['adduserfiles']    = SimpleItem(defvalue=[None], typelist=['type(None)','str'], sequence = 1, doc='')
     schemadic['jobtype']         = SimpleItem(defvalue=None, typelist=['type(None)','str'], doc='')
-    schemadic['adduserfiles']    = SimpleItem(defvalue=[None], typelist=['type(None)','str'], sequence = 1, doc='')
+    schemadic['userfiles']       = SimpleItem(defvalue=[None], typelist=['type(None)','str'], sequence = 1, doc='')
     schemadic['siteblacklist']   = SimpleItem(defvalue=[None], typelist=['type(None)','str'], sequence = 1, doc='')
     schemadic['sitewhitelist']   = SimpleItem(defvalue=[None], typelist=['type(None)','str'], sequence = 1, doc='')
     schemadic['userdn']          = SimpleItem(defvalue=None, typelist=['type(None)','str'], doc='')

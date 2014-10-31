@@ -291,6 +291,7 @@ class CRABServer(GangaObject):
                       'addoutputfiles',
                       'edmoutfiles',
                       'adduserfiles',
+                      'userfiles',
                       'jobtype',
                       'siteblacklist',
                       'sitewhitelist',
