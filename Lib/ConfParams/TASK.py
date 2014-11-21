@@ -86,6 +86,7 @@ class TASK(GangaObject):
     schemadic['ignorelocality']  = SimpleItem(defvalue=None, typelist=['type(None)','int'], doc='')
     schemadic['activity']        = SimpleItem(defvalue=None, typelist=['type(None)','str'], doc='')
     schemadic['extrajdl']        = SimpleItem(defvalue=[None], typelist=['type(None)','str'], sequence = 1, doc='')
+    schemadic['scheddname']      = SimpleItem(defvalue=None, typelist=['type(None)','str'], doc='')
 
     """
     schemadic['additional_input_files']  = SimpleItem(defvalue=None, typelist=['type(None)','str'], doc=_comments[0])
