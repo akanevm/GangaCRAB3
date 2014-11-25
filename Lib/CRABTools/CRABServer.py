@@ -328,6 +328,13 @@ class CRABServer(GangaObject):
         spec['cachefilename'] = cachefilename
         spec['cacheurl'] = 'https://cmsweb.cern.ch/crabcache'         
 
+        if spec['userfiles']:
+            # open usefiles source file and add userfiles list
+            uf = open(spec['userfiles'], 'r')
+            spec['userfiles'] = []
+            for line in uf:
+                spec['userfiles'].append(line.replace('\n', ''))
+
         try:
             extrajdlfields = spec['extrajdl']
             extrajdl = ""
@@ -368,9 +375,9 @@ class CRABServer(GangaObject):
         #spec = {'workflow': 'crab_20140129_174310', 'cacheurl': 'https://cmsweb.cern.ch/crabcache/file', 'publishname': '161f88b7224ebec344e685476aab1797', 'savelogsflag': 0, 'nonprodsw': 0, 'tfileoutfiles': [], 'asyncdest': 'T2_IT_Pisa', 'oneEventMode': 0, 'algoargs': 10, 'totalunits': 0, 'cachefilename': 'b813537a3eded4fb83426fa1e0d0fd6f09fe17f344371d1ad5d64607e3a1c44e.tar.gz', 'jobarch': 'slc5_amd64_gcc462', 'publication': 0, 'splitalgo': 'FileBased', 'jobsw': 'CMSSW_5_3_4', 'dbsurl': 'http://cmsdbsprod.cern.ch/cms_dbs_prod_global/servlet/DBSServlet', 'addoutputfiles': [], 'edmoutfiles': ['myroot.root'], 'adduserfiles': [], 'inputdata': '/GenericTTbar/HC-CMSSW_5_3_1_START53_V5-v1/GEN-SIM-RECO', 'jobtype': 'Analysis'}
 
         try:
-            dictresult, status, reason = server.put( resource, data = self._encodeRequest(spec) )
-            logger.debug("dictresult %s, status %s, reason: %s" % (dictresult, status,reason))
-            job.backend.taskname = dictresult['result'][0]['RequestName']
+            #dictresult, status, reason = server.put( resource, data = self._encodeRequest(spec) )
+            #logger.debug("dictresult %s, status %s, reason: %s" % (dictresult, status,reason))
+            #job.backend.taskname = dictresult['result'][0]['RequestName']
             return True
         except HTTPException, e:
             logger.error(type(e))
