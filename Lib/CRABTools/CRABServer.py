@@ -224,7 +224,7 @@ class CRABServer(GangaObject):
             cmsweb, e.g.:   adduserfiles = ['file1','file2']  ===>  [...]adduserfiles=file1&adduserfiles=file2[...]
         """
         listParams = ['adduserfiles', 'addoutputfiles', 'sitewhitelist', 'siteblacklist', 'blockwhitelist', 'blockblacklist',
-                      'tfileoutfiles', 'edmoutfiles', 'runs', 'lumis'] #TODO automate this using ClientMapping
+                      'tfileoutfiles', 'edmoutfiles', 'runs', 'lumis', 'userfiles'] #TODO automate this using ClientMapping
         encodedLists = ''
         for lparam in listParams:
             if lparam in configreq:
@@ -328,7 +328,7 @@ class CRABServer(GangaObject):
         spec['cachefilename'] = cachefilename
         spec['cacheurl'] = 'https://cmsweb.cern.ch/crabcache'         
 
-        if spec['userfiles']:
+        if spec.has_key('userfiles'):
             # open usefiles source file and add userfiles list
             uf = open(spec['userfiles'], 'r')
             spec['userfiles'] = []
