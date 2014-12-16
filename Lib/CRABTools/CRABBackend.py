@@ -467,7 +467,7 @@ class CRABBackend(IBackend):
                     continue
                 except: 
                     logger.error('Get status for job %d failed, skipping.' % j.id)
-                    raise
+                    continue
 
                 if joblist:
                     logger.info('There are subjob statuses for job %s' % j.id)
