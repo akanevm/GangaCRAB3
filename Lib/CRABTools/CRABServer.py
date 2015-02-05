@@ -313,7 +313,8 @@ class CRABServer(GangaObject):
                       'publishdbsurl',
                       'activity',
                       'extrajdl',
-                      'scheddname'
+                      'scheddname',
+                      'collector'
                      ]
         spec = {}
         for field in specFields:
