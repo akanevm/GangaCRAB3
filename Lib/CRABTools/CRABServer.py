@@ -224,7 +224,7 @@ class CRABServer(GangaObject):
             cmsweb, e.g.:   adduserfiles = ['file1','file2']  ===>  [...]adduserfiles=file1&adduserfiles=file2[...]
         """
         listParams = ['adduserfiles', 'addoutputfiles', 'sitewhitelist', 'siteblacklist', 'blockwhitelist', 'blockblacklist',
-                      'tfileoutfiles', 'edmoutfiles', 'runs', 'lumis', 'userfiles'] #TODO automate this using ClientMapping
+                      'tfileoutfiles', 'edmoutfiles', 'runs', 'lumis', 'userfiles', 'extrajdl'] #TODO automate this using ClientMapping
         encodedLists = ''
         for lparam in listParams:
             if lparam in configreq:
@@ -335,16 +335,7 @@ class CRABServer(GangaObject):
             spec['userfiles'] = []
             for line in uf:
                 spec['userfiles'].append(line.replace('\n', ''))
-
-        try:
-            extrajdlfields = spec['extrajdl']
-            extrajdl = ""
-            for value in extrajdlfields:
-                extrajdl += value
-            spec['extrajdl'] = extrajdl
-        except KeyError:
-            pass
-
+ 
         if job.backend.asyncdest:
             spec['asyncdest'] = job.backend.asyncdest
  
