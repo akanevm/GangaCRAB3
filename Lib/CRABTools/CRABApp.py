@@ -19,12 +19,8 @@ logger = getLogger()
 class CRABApp(IApplication):
 
   comments=[]
-  comments.append('crab.cfg file either created by GangaCMS or added by user.')
-  comments.append('Workdir.')
 
   schemadic = {}
-  #schemadic['cfgfile']        = SimpleItem(defvalue=None,    typelist=['type(None)','str'], doc=comments[0], copiable=0) 
-  schemadic['workdir']        = SimpleItem(defvalue=None,    typelist=['type(None)','str'], doc=comments[1], copiable=0) 
 
   # is_prepared is needed for GangaRobot on Ganga 5.7.0 and later.
   schemadic['is_prepared']    = SharedItem(defvalue=None,
@@ -41,53 +37,11 @@ class CRABApp(IApplication):
 
   def __init__(self):
     logger.info("init crab3app")
-#    self.server = CRABServer()
     super(CRABApp,self).__init__()
 
-  def writeCRABFile(self,job,cfg_file):
-
-    file = open(cfg_file,'w')     
-
-    job.inputdata.ui_working_dir = job.outputdir
-                       
-    for params in [CRAB(), TASK()]:
-
-      section = params.__class__.__name__
-
-      config = Ganga.Utility.Config.getConfig('%s_CFG'%(section))
-      file.write('['+section+']\n\n')
-
-      for k in params.schemadic.keys():
-
-        # We get the parametef from the config. If it is not NULL,
-        # we use that, otherwise, we try to take it from inputdata.
-        attr = config[k]
-        if attr == None:
-          attr = getattr(job.inputdata,k)
-
-        if attr != None:  
-          file.write('%s=%s\n'%(k,attr))                  
-      file.write('\n')
-
-    file.close()
 
   def master_configure(self):
     logger.info("master_configure crab3app")
-    """
-    #Get job containing this CRABApp 
-    job = self.getJobObject()
-
-    #File where crab.cfg is going to be written
-    cfg_file = '%scrab.cfg'%(job.inputdir)
-    job.application.writeCRABFile(job,cfg_file)
-    job.application.cfgfile = cfg_file
-
-    job.application.workdir = job.inputdata.ui_working_dir
-
-    server = CRABServer()
-    #server.create(job)
-#    self.server.create(job)
-    """
     job = self.getJobObject()
     try:
         userproxy = os.environ['X509_USER_PROXY']
@@ -101,3 +55,6 @@ class CRABApp(IApplication):
   def configure(self,masterappconfig):
     logger.info("configure crab3app")
     return (None,None)
+
+  def prepare(self):
+    logger.info("prepare CRABApp")
