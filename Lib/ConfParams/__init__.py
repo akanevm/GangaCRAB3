@@ -1,7 +1,7 @@
-from CMSSW import *
-from CRAB import *
-from GRID import *
-from USER import *
-from TASK import *
-
-
+from General import *
+from JobType import *
+from Data import *
+from Site import *
+from User import *
+from Debug import *
+from CRABConfig import *
