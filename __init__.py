@@ -96,23 +96,14 @@ def loadPlugins( config = {} ):
     import Lib.ConfParams
 
     crab_cfg_configs = {}
-    """
-    for params in [Lib.ConfParams.CMSSW(),Lib.ConfParams.CRAB(),Lib.ConfParams.GRID(),Lib.ConfParams.USER()]:
+
+    for params in [Lib.ConfParams.Data(), Lib.ConfParams.User(), Lib.ConfParams.General(), Lib.ConfParams.Site(), Lib.ConfParams.Debug(), Lib.ConfParams.JobType()]:
 
       section = params.__class__.__name__
-      crab_cfg_configs[section] = Ganga.Utility.Config.makeConfig('%s_CFG'%(section),'Parameters for %s at crab.cfg.'%(section))
+      crab_cfg_configs[section] = Ganga.Utility.Config.makeConfig('CRABConfig_%s' % (section), 'Parameters for %s.' % (section) )
 
-      for k in params.schemadic.keys():
-       crab_cfg_configs[section].addOption(k,None,'%s at crab.cfg'%(k))
-    """
-
-    for params in [Lib.ConfParams.TASK(),Lib.ConfParams.CRAB()]:
-
-      section = params.__class__.__name__
-      crab_cfg_configs[section] = Ganga.Utility.Config.makeConfig('%s_CFG'%(section),'Parameters for %s.'%(section))
-
-      for k in params.schemadic.keys():
-       crab_cfg_configs[section].addOption(k,None,'%s'%(k))
+      for k in params._schema.datadict.keys():
+       crab_cfg_configs[section].addOption(k, None, '%s' % (k) )
 
     print 'GangaCRAB3> [INFO] loadPlugins : done'
 
