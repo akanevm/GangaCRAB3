@@ -42,7 +42,7 @@ class Data(GangaObject):
         'outLFNDirBase'             : SimpleItem(defvalue=None,typelist=['type(None)', 'str'], protected=0,copyable=1,doc=_doc[11]),
         'publication'               : SimpleItem(defvalue=None,typelist=['type(None)', 'bool'], protected=0,copyable=1,doc=_doc[12]),
         'publishDBS'                : SimpleItem(defvalue=None,typelist=['type(None)', 'str'], protected=0,copyable=1,doc=_doc[13]),
-        'publishDataName'           : SimpleItem(defvalue=None,typelist=['type(None)', 'str'], protected=0,copyable=1,doc=_doc[14]),
+        'outputDatasetTag'           : SimpleItem(defvalue=None,typelist=['type(None)', 'str'], protected=0,copyable=1,doc=_doc[14]),
         'publishWithGroupName'      : SimpleItem(defvalue=None,typelist=['type(None)', 'bool'], protected=0,copyable=1,doc=_doc[15]),
         'ignoreLocality'            : SimpleItem(defvalue=None,typelist=['type(None)', 'bool'], protected=0,copyable=1,doc=_doc[16]),
         'userInputFiles'            : SimpleItem(defvalue=[None],typelist=['type(None)', 'str'],sequence=1,protected=0,copyable=1,doc=_doc[17]),
