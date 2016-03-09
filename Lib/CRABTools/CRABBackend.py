@@ -5,8 +5,8 @@ from Ganga.GPIDev.Schema import *
 from Ganga.Utility import Config
 from Ganga.Utility.logging import getLogger
 from Ganga.Utility.Shell import Shell
-from GangaCRAB3.Lib.CRABTools.CRABServer import CRABServer
-from GangaCRAB3.Lib.CRABTools.CRABServerError import CRABServerError
+#from GangaCRAB3.Lib.CRABTools.CRABServer import CRABServer
+#from GangaCRAB3.Lib.CRABTools.CRABServerError import CRABServerError
 from GangaCRAB3.Lib.ConfParams import Data, User, General, Debug, JobType
 from xml.dom.minidom import parse
 
@@ -171,8 +171,20 @@ class CRABBackend(IBackend):
 
         return 1
 
-    def updateSubjobStatus(self, status):
+    def getStats(self, jobstatus):
+        """ Retrieve jobs statistics. """
 
+        job = self.getJobObject()
+
+        for metric, value in jobstatus.items():
+           job.backend.report[metric] = value
+
+        logger.info(job.backend.report)
+           
+
+    def updateSubjobStatus(self, jobstatus):
+
+        """
         GANGA_S = ['completed','failed','killed','new','running','submitted','submitting']
         STATUS  = {'A':'aborted',
                    'C':'created',
@@ -190,34 +202,36 @@ class CRABBackend(IBackend):
                    'W':'declared',
                    'UN':'undefined',
                    }
-
+        """
+        state = jobstatus['State']
         job = self.getJobObject()
 
-        if status in ['cooloff', 'unsubmitted', 'idle'] and job.status not in ['submitted']:
-            job.updateStatus('submitted')
+        if state in ['cooloff', 'unsubmitted', 'idle']:
+            if job.status not in ['submitted']:
+                job.updateStatus('submitted')
 
-        elif status in ['running', 'trasferring']:
+        elif state in ['running', 'trasferring']:
             if job.status in ['submitting']:
                 job.updateStatus('submitted')
             elif job.status not in ['running']:
                 job.updateStatus('running')
 
-        elif status in ['failed', 'held']:
+        elif state in ['failed', 'held']:
             if job.status in ['submitting']:
                 job.updateStatus('submitted')
             elif job.status not in ['failed']:
                 job.updateStatus('failed')
 
-        elif status=='finished':
+        elif state=='finished':
             if job.status in ['submitting']:
                 job.updateStatus('submitted')
             elif job.status not in['completed']:
-                #job.backend.parseResults()
+                job.backend.getStats(jobstatus)
                 job.updateStatus('completed')
                 #logger.info('retrieving job output for job %s' % job.id) 
 
         else:
-            logger.warning('UNKNOWN JOB STATUS. Cannnot update job status.')  
+            logger.warning('UNKNOWN JOB STATUS "%s". Cannnot update job status.' % state)  
 
 
     def master_updateMonitoringInformation(jobs):
@@ -236,47 +250,57 @@ class CRABBackend(IBackend):
             crab_work_dir = os.path.join(j.outputdir, j.backend.requestname)
             logger.info('crab_work_dir: %s' % crab_work_dir)
 
-            statusresult = crabCommand('status', dir = crab_work_dir, proxy = '/data/hc/apps/cms/config/x509up_production2')
-            joblist = statusresult['jobList']
-            logger.info(len(joblist))
-            logger.info(joblist)
+            statusresult = {}
+            try:
+                statusresult = crabCommand('status', dir = crab_work_dir, proxy = '/data/hc/apps/cms/config/x509up_production2', long=True)
+                logger.info("CRAB3 Status result: %s" % statusresult)
+            except httplib.HTTPException as e:
+                logger.error(e.result)
+            
+            try:
+               jobsdict = statusresult['jobs']
+            except KeyError:
+               jobsdict = {}
 
-            if joblist:
+            if jobsdict:
                 logger.info('There are subjob statuses for job %s' % j.id)
                 if not j.subjobs:
                     logger.warning('No subjob object for job %s' % j.id)
-                    j.subjobs = []
-                    subjob_index = 0
-                    for subjob in joblist:
+                    j.subjobs = [None] * len(jobsdict)
+                    #subjob_index = 0
+                    for crabid, status in jobsdict.items():
+                        crabid = int(crabid)
+                        jobstatus = status['State']
                         logger.info('Creating subjob')
-                        status = subjob[0]
-                        crab_id = subjob[1]
                         sj = Job()
                         sj.copyFrom(j)
-                        sj.backend.crabid = crab_id
+                        sj.backend.crabid = crabid
                         sj.inputdata = None
-                        sj.id = subjob_index
-                        subjob_index += 1
+                        sj.id = crabid
                         sj.updateStatus('submitting')
                         sj.backend.updateSubjobStatus(status)
-                        j.subjobs.append(sj)
+                        j.subjobs[crabid-1] = sj
+
+                    #j.subjobs.sort(key=lambda subjob: subjob.id)
+
                 else:
-                    for subjob in joblist:
-                        index  = int(subjob[1])
-                        status = subjob[0]
-                        logger.debug('Found subjob %s searching with index %s' % (j.subjobs[index-1].backend.crabid, index))
-                        j.subjobs[index-1].backend.updateSubjobStatus(status)
+                    for crabid, status in jobsdict.items():
+                        crabid = int(crabid)
+                        j.subjobs[crabid-1].backend.updateSubjobStatus(status)
 
                 #j.updateStatus('running')
 
             else:
                 logger.info('There are no subjobs for job %s' % (j.id))
-                logger.info('Checking task status from report: %s' % statusresult['status'])
-                taskstatus = statusresult['status']
-                if taskstatus in ['FAILED']:
-                    logger.info('Job failed: %s' % dictresult)
-                    j.updateStatus('failed')
-
+                #logger.info('Checking task status from report: %s' % statusresult['status'])
+                logger.info('Checking task status from report')
+                try:
+                    taskstatus = statusresult['status']
+                    if taskstatus in ['FAILED']:
+                        logger.info('Job failed: %s' % dictresult)
+                        j.updateStatus('failed')
+                except KeyError:
+                    pass
 
     master_updateMonitoringInformation = staticmethod(master_updateMonitoringInformation)
 
