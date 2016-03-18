@@ -1,13 +1,13 @@
 from Ganga.GPIDev.Lib.Dataset import Dataset
 from Ganga.GPIDev.Schema import Schema, SimpleItem, Version
-from GangaCRAB3.Lib.ConfParams import CRAB, TASK 
+#from GangaCRAB3.Lib.ConfParams import CRAB, TASK 
 
 
 class CRABDataset(Dataset):
     """Dataset definition for CRAB jobsets."""
     schemadic = {}
-    schemadic.update(CRAB().schemadic)
-    schemadic.update(TASK().schemadic)
+    #schemadic.update(CRAB().schemadic)
+    #schemadic.update(TASK().schemadic)
     #schemadic['target_site'] = SimpleItem(defvalue=None,
     #                                      typelist=['type(None)', 'str'],
     #                                      doc='Target site name for the job.')
