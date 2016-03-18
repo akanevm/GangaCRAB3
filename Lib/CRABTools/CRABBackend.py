@@ -266,7 +266,8 @@ class CRABBackend(IBackend):
                 logger.info('There are subjob statuses for job %s' % j.id)
                 if not j.subjobs:
                     logger.warning('No subjob object for job %s' % j.id)
-                    j.subjobs = [None] * len(jobsdict)
+                    subjoblist = [None] * len(jobsdict)
+                    #j.subjobs = [None] * len(jobsdict)
                     #subjob_index = 0
                     for crabid, status in jobsdict.items():
                         crabid = int(crabid)
@@ -276,10 +277,14 @@ class CRABBackend(IBackend):
                         sj.copyFrom(j)
                         sj.backend.crabid = crabid
                         sj.inputdata = None
-                        sj.id = crabid
+                        sj.id = crabid-1
                         sj.updateStatus('submitting')
                         sj.backend.updateSubjobStatus(status)
-                        j.subjobs[crabid-1] = sj
+                        subjoblist[crabid-1] = sj
+
+                    for newsubjob in subjoblist:
+                      j.subjobs.append(newsubjob)
+                    logger.info('New subjobs for job %s: %s' % (j.id, j.subjobs))
 
                     #j.subjobs.sort(key=lambda subjob: subjob.id)
 
