@@ -239,6 +239,7 @@ class CRABBackend(IBackend):
         logger.info('Updating the monitoring information of ' + str(len(jobs)) + ' jobs')
 
         from CRABAPI.RawCommand import crabCommand
+        from CRABClient.ClientExceptions import ConfigurationException
         import httplib
 
         for j in jobs:
@@ -256,7 +257,18 @@ class CRABBackend(IBackend):
                 logger.info("CRAB3 Status result: %s" % statusresult)
             except httplib.HTTPException as e:
                 logger.error(e.result)
-            
+            except ConfigurationException as ce:
+                # From CRAB3 error message: Error loading CRAB cache file. Try to do 'rm -rf /root/.crab3' and run the crab command again.
+                import subprocess
+                import uuid
+                randomstring = str(uuid.uuid4().get_hex().upper()[0:6])
+                subprocess.call(["mv", "/root/.crab3", "/tmp/.crab3."+randomstring])
+                try:
+                    statusresult = crabCommand('status', dir = crab_work_dir, proxy = '/data/hc/apps/cms/config/x509up_production2', long=True)
+                    logger.info("CRAB3 Status result: %s" % statusresult)
+                except httplib.HTTPException as e:
+                    logger.error(e.result)            
+
             try:
                jobsdict = statusresult['jobs']
             except KeyError:
