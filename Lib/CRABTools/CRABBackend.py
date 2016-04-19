@@ -118,6 +118,7 @@ class CRABBackend(IBackend):
                 print section.dictionary_()
 
             from CRABAPI.RawCommand import crabCommand
+            from CRABClient.ClientExceptions import ConfigurationException
             import httplib
 
             try:
@@ -129,6 +130,18 @@ class CRABBackend(IBackend):
             except httplib.HTTPException as e:
                 logger.error(e.result)
                 return False
+            except ConfigurationException as ce:
+                # From CRAB3 error message: Error loading CRAB cache file. Try to do 'rm -rf /root/.crab3' and run the crab command again.
+                import subprocess
+                import uuid
+                randomstring = str(uuid.uuid4().get_hex().upper()[0:6])
+                subprocess.call(["mv", "/root/.crab3", "/tmp/.crab3."+randomstring])
+                try:
+                    statusresult = crabCommand('submit', config = job_config, proxy = '/data/hc/apps/cms/config/x509up_production2')
+                    logger.info("CRAB3 Status result: %s" % statusresult)
+                except httplib.HTTPException as e:
+                    logger.error(e.result)
+
         else:
             logger.warning('No rjobs found')
 
@@ -145,6 +158,7 @@ class CRABBackend(IBackend):
         job = self.getJobObject()
 
         from CRABAPI.RawCommand import crabCommand
+        from CRABClient.ClientExceptions import ConfigurationException
         import httplib
  
         if not job.backend.requestname:
@@ -161,6 +175,17 @@ class CRABBackend(IBackend):
             logger.error("Error while killing job %s" % job.id)
             logger.error(e.result)
             return False
+        except ConfigurationException as ce:
+           # From CRAB3 error message: Error loading CRAB cache file. Try to do 'rm -rf /root/.crab3' and run the crab command again.
+           import subprocess
+           import uuid
+           randomstring = str(uuid.uuid4().get_hex().upper()[0:6])
+           subprocess.call(["mv", "/root/.crab3", "/tmp/.crab3."+randomstring])
+           try:
+               statusresult = crabCommand('kill', dir = crab_work_dir, proxy = '/data/hc/apps/cms/config/x509up_production2')
+               logger.info("CRAB3 Status result: %s" % statusresult)
+           except httplib.HTTPException as e:
+               logger.error(e.result)
 
         return True
 
