@@ -171,21 +171,41 @@ class CRABBackend(IBackend):
         try:
             crabCommand('kill', dir = crab_work_dir, proxy = '/data/hc/apps/cms/config/x509up_production2')
   
+            if len(job.subjobs):
+                for s in job.subjobs:
+                    if not s.status in ['completed','failed']:
+                        s.updateStatus('killed')
+            else:
+                if not job.status in ['completed','failed']:
+                    job.updateStatus('killed')
+
+            job.updateMasterJobStatus()
+
+
         except httplib.HTTPException as e:
             logger.error("Error while killing job %s" % job.id)
             logger.error(e.result)
             return False
         except ConfigurationException as ce:
            # From CRAB3 error message: Error loading CRAB cache file. Try to do 'rm -rf /root/.crab3' and run the crab command again.
-           import subprocess
-           import uuid
-           randomstring = str(uuid.uuid4().get_hex().upper()[0:6])
-           subprocess.call(["mv", "/root/.crab3", "/tmp/.crab3."+randomstring])
-           try:
-               statusresult = crabCommand('kill', dir = crab_work_dir, proxy = '/data/hc/apps/cms/config/x509up_production2')
-               logger.info("CRAB3 Status result: %s" % statusresult)
-           except httplib.HTTPException as e:
-               logger.error(e.result)
+            import subprocess
+            import uuid
+            randomstring = str(uuid.uuid4().get_hex().upper()[0:6])
+            subprocess.call(["mv", "/root/.crab3", "/tmp/.crab3."+randomstring])
+            try:
+                statusresult = crabCommand('kill', dir = crab_work_dir, proxy = '/data/hc/apps/cms/config/x509up_production2')
+ 
+                if len(job.subjobs):
+                    for s in job.subjobs:
+                        if not s.status in ['completed','failed']:
+                            s.updateStatus('killed')
+                else:
+                    if not job.status in ['completed','failed']:
+                        job.updateStatus('killed')
+ 
+                job.updateMasterJobStatus()
+            except httplib.HTTPException as e:
+                logger.error(e.result)
 
         return True
 
