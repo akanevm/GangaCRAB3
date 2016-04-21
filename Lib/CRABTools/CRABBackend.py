@@ -247,6 +247,12 @@ class CRABBackend(IBackend):
             elif job.status not in ['failed']:
                 job.updateStatus('failed')
 
+        elif state == 'killed':
+           if job.status in ['submitting']:
+                job.updateStatus('submitted')
+            elif job.status not in ['killed']:
+                job.updateStatus('killed')
+
         elif state=='finished':
             if job.status in ['submitting']:
                 job.updateStatus('submitted')
