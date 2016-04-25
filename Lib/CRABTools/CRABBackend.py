@@ -139,6 +139,10 @@ class CRABBackend(IBackend):
                 try:
                     statusresult = crabCommand('submit', config = job_config, proxy = '/data/hc/apps/cms/config/x509up_production2')
                     logger.info("CRAB3 Status result: %s" % statusresult)
+                    job.backend.requestname = res['requestname']
+                    job.backend.taskname    = res['uniquerequestname']
+                    job.updateStatus('submitted')
+
                 except httplib.HTTPException as e:
                     logger.error(e.result)
 
@@ -270,7 +274,7 @@ class CRABBackend(IBackend):
         elif state == 'killed':
            if job.status in ['submitting']:
                 job.updateStatus('submitted')
-            elif job.status not in ['killed']:
+           elif job.status not in ['killed']:
                 job.updateStatus('killed')
 
         elif state=='finished':
