@@ -368,7 +368,7 @@ class CRABBackend(IBackend):
                 logger.info('Checking task status from report')
                 try:
                     taskstatus = statusresult['status']
-                    if taskstatus in ['FAILED']:
+                    if taskstatus in ['FAILED', 'SUBMITFAILED']:
                         logger.info('Job failed: %s' % dictresult)
                         j.updateStatus('failed')
                 except KeyError:
