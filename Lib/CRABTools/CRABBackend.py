@@ -94,11 +94,17 @@ class CRABBackend(IBackend):
                 # Updating configuration in case of Ganga inline options specified                
                 ganga_option = ganga_section_config[parameter_name]
                 if ganga_option:
+
+                    # CRAB Config doesn't like Ganga sequence (or tuples) type instead of Lists 
+                    # Passing sequance with Ganga inline options makes it a tuple.                   
+                    if parameter_type._meta['sequence']:
+                        ganga_option = list(ganga_option)
+
                     task_section_config.__setattr__(parameter_name, ganga_option)
 
         # Some internal configuration
         job_config.General.workArea = job.outputdir 
- 
+
         return job_config
 
     def master_submit(self, rjobs, subjobconfigs, masterjobconfig):
