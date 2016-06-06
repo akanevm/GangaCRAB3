@@ -134,6 +134,7 @@ class CRABBackend(IBackend):
                 job.updateStatus('submitted')
 
             except httplib.HTTPException as e:
+                logger.error(e.headers)
                 logger.error(e.result)
                 return False
             except ConfigurationException as ce:
@@ -150,6 +151,7 @@ class CRABBackend(IBackend):
                     job.updateStatus('submitted')
 
                 except httplib.HTTPException as e:
+                    logger.error(e.headers)
                     logger.error(e.result)
 
         else:
@@ -194,6 +196,7 @@ class CRABBackend(IBackend):
 
         except httplib.HTTPException as e:
             logger.error("Error while killing job %s" % job.id)
+            logger.error(e.headers)
             logger.error(e.result)
             return False
         except ConfigurationException as ce:
@@ -215,6 +218,7 @@ class CRABBackend(IBackend):
  
                 job.updateMasterJobStatus()
             except httplib.HTTPException as e:
+                logger.error(e.headers)
                 logger.error(e.result)
 
         return True
@@ -328,6 +332,7 @@ class CRABBackend(IBackend):
                     statusresult = crabCommand('status', dir = crab_work_dir, proxy = '/data/hc/apps/cms/config/x509up_production2', long=True)
                     logger.info("CRAB3 Status result: %s" % statusresult)
                 except httplib.HTTPException as e:
+                    logger.error(e.headers)
                     logger.error(e.result)            
 
             try:
