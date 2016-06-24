@@ -98,7 +98,14 @@ class CRABBackend(IBackend):
                     # CRAB Config doesn't like Ganga sequence (or tuples) type instead of Lists 
                     # Passing sequance with Ganga inline options makes it a tuple.                   
                     if parameter_type._meta['sequence']:
-                        ganga_option = list(ganga_option)
+                        # Ugly but we need this because otherwise tuple of 1 element with a string would
+                        # be transformed in a list of chars ( ('ab') --> ['a', 'b'] )
+                        import json
+                        ganga_option = json.loads(json.dumps(ganga_option))
+                        if type(ganga_option) != list:
+                            ganga_option = [ganga_option]
+                        # loads makes strings 'utf' type, CRAB3 Server wants 'str' type
+                        ganga_option = map(lambda x: str(x), ganga_option)
 
                     task_section_config.__setattr__(parameter_name, ganga_option)
 
